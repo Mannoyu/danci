@@ -33,7 +33,7 @@ function SidebarContent({ session, onNavigate }: { session: SessionUser; onNavig
       </div>
       <nav className="flex-1 space-y-1 p-3" aria-label="后台主导航">
         <p className="mb-2 px-2 pt-2 text-[11px] font-medium uppercase text-muted-foreground">内容与权限</p>
-        {navigation.map((item) => {
+        {navigation.filter((item) => item.href !== "/admin-users" || session.role === "system_admin").map((item) => {
           const active = pathname === item.href;
           return (
             <Link

@@ -3,7 +3,6 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
-import { hashPassword } from "@/lib/password";
 
 const dataDirectory = path.join(process.cwd(), "data");
 fs.mkdirSync(dataDirectory, { recursive: true });
@@ -13,26 +12,6 @@ database.pragma("journal_mode = WAL");
 database.pragma("foreign_keys = ON");
 
 database.exec(`
-  CREATE TABLE IF NOT EXISTS admin_users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE COLLATE NOCASE,
-    password_hash TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT '内容管理员',
-    status TEXT NOT NULL DEFAULT '正常',
-    created_at TEXT NOT NULL,
-    last_active TEXT
-  );
-
-  CREATE TABLE IF NOT EXISTS sessions (
-    id TEXT PRIMARY KEY,
-    admin_user_id INTEGER NOT NULL,
-    token_hash TEXT NOT NULL UNIQUE,
-    expires_at TEXT NOT NULL,
-    created_at TEXT NOT NULL,
-    FOREIGN KEY (admin_user_id) REFERENCES admin_users(id) ON DELETE CASCADE
-  );
-
   CREATE TABLE IF NOT EXISTS books (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
@@ -42,14 +21,6 @@ database.exec(`
     updated_at TEXT NOT NULL
   );
 `);
-
-const adminCount = database.prepare("SELECT COUNT(*) AS count FROM admin_users").get() as { count: number };
-if (adminCount.count === 0) {
-  database.prepare(`
-    INSERT INTO admin_users (name, email, password_hash, role, status, created_at, last_active)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).run("系统管理员", "admin@example.com", hashPassword("12345678"), "超级管理员", "正常", new Date().toISOString(), null);
-}
 
 const bookCount = database.prepare("SELECT COUNT(*) AS count FROM books").get() as { count: number };
 if (bookCount.count === 0) {

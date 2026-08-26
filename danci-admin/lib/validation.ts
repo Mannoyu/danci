@@ -18,5 +18,12 @@ export const adminSchema = z.object({
   name: z.string().trim().min(2, "姓名至少需要 2 个字符").max(30, "姓名不能超过 30 个字符"),
   email: z.email("请输入有效的邮箱地址").transform((value) => value.trim().toLowerCase()),
   password: z.string().min(8, "密码至少需要 8 个字符"),
-  role: z.enum(["超级管理员", "内容管理员"]),
+  role: z.enum(["system_admin", "admin"]),
+});
+
+export const updateAdminSchema = z.object({
+  name: z.string().trim().min(2, "姓名至少需要 2 个字符").max(30, "姓名不能超过 30 个字符"),
+  email: z.email("请输入有效的邮箱地址").transform((value) => value.trim().toLowerCase()),
+  role: z.enum(["system_admin", "admin"]),
+  status: z.enum(["active", "disabled"]),
 });

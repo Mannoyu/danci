@@ -1,34 +1,59 @@
+import { asc, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { database } from "@/lib/db";
+import { db } from "@/db";
+import { adminUsers } from "@/db/schema";
 import { hashPassword } from "@/lib/password";
 import { getSessionUser } from "@/lib/session";
 import { adminSchema } from "@/lib/validation";
 
-type AdminRow = { id: number; name: string; email: string; role: string; status: string; last_active: string | null };
-
 export async function GET() {
-  if (!(await getSessionUser())) return NextResponse.json({ error: "未登录" }, { status: 401 });
-  const rows = database.prepare("SELECT id, name, email, role, status, last_active FROM admin_users ORDER BY id").all() as AdminRow[];
-  return NextResponse.json({ admins: rows.map((row) => ({ ...row, lastActive: row.last_active, last_active: undefined })) });
+  const session = await requireSystemAdmin();
+  if (session instanceof NextResponse) return session;
+
+  const admins = await db.select({
+    id: adminUsers.id,
+    name: adminUsers.name,
+    email: adminUsers.email,
+    role: adminUsers.role,
+    status: adminUsers.status,
+    lastActive: adminUsers.lastActiveAt,
+    createdAt: adminUsers.createdAt,
+  }).from(adminUsers).orderBy(asc(adminUsers.createdAt));
+
+  return NextResponse.json({ admins, currentUserId: session.id });
 }
 
 export async function POST(request: Request) {
-  const session = await getSessionUser();
-  if (!session) return NextResponse.json({ error: "未登录" }, { status: 401 });
-  if (session.role !== "超级管理员") return NextResponse.json({ error: "只有超级管理员可以添加成员" }, { status: 403 });
+  const session = await requireSystemAdmin();
+  if (session instanceof NextResponse) return session;
 
   const parsed = adminSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
-  if (database.prepare("SELECT 1 FROM admin_users WHERE email = ?").get(parsed.data.email)) {
-    return NextResponse.json({ error: "该邮箱已经存在" }, { status: 409 });
-  }
+  const [existing] = await db.select({ id: adminUsers.id }).from(adminUsers).where(eq(adminUsers.email, parsed.data.email)).limit(1);
+  if (existing) return NextResponse.json({ error: "该邮箱已经存在" }, { status: 409 });
 
-  const result = database.prepare(`
-    INSERT INTO admin_users (name, email, password_hash, role, status, created_at)
-    VALUES (?, ?, ?, ?, '正常', ?)
-  `).run(parsed.data.name, parsed.data.email, hashPassword(parsed.data.password), parsed.data.role, new Date().toISOString());
+  const [admin] = await db.insert(adminUsers).values({
+    name: parsed.data.name,
+    email: parsed.data.email,
+    passwordHash: hashPassword(parsed.data.password),
+    role: parsed.data.role,
+    status: "active",
+  }).returning({
+    id: adminUsers.id,
+    name: adminUsers.name,
+    email: adminUsers.email,
+    role: adminUsers.role,
+    status: adminUsers.status,
+    lastActive: adminUsers.lastActiveAt,
+    createdAt: adminUsers.createdAt,
+  });
 
-  return NextResponse.json({
-    admin: { id: Number(result.lastInsertRowid), name: parsed.data.name, email: parsed.data.email, role: parsed.data.role, status: "正常", lastActive: null },
-  }, { status: 201 });
+  return NextResponse.json({ admin }, { status: 201 });
+}
+
+async function requireSystemAdmin() {
+  const session = await getSessionUser();
+  if (!session) return NextResponse.json({ error: "未登录" }, { status: 401 });
+  if (session.role !== "system_admin") return NextResponse.json({ error: "无权访问管理员管理" }, { status: 403 });
+  return session;
 }
