@@ -10,8 +10,11 @@ export const publicSignUpSchema = signInSchema.extend({
 });
 
 export const bookSchema = z.object({
-  title: z.string().trim().min(2, "名称至少需要 2 个字符").max(80),
-  category: z.string().trim().min(1, "请输入分类").max(30),
+  title: z.string().trim().min(2, "名称至少需要 2 个字符").max(80, "名称不能超过 80 个字符"),
+  wordCount: z.coerce.number().int("单词数量必须是整数").nonnegative("单词数量不能为负数"),
+  coverUrl: z.string().trim().url("请输入有效的封面 URL").optional().or(z.literal("")),
+  bookId: z.string().trim().optional(),
+  tags: z.string().trim().optional(),
 });
 
 export const adminSchema = z.object({

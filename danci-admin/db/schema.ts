@@ -39,7 +39,19 @@ export const words = pgTable("words", {
   bookId: text("bookId"),
 });
 
+export const books = pgTable("books", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  wordCount: integer("word_count").notNull().default(0),
+  coverUrl: text("cover_url"),
+  bookId: text("book_id"),
+  tags: text("tags"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 export type AdminRole = "system_admin" | "admin";
 export type AdminStatus = "active" | "disabled";
 export type AdminUser = typeof adminUsers.$inferSelect;
 export type Word = typeof words.$inferSelect;
+export type Book = typeof books.$inferSelect;
