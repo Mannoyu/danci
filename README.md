@@ -83,3 +83,24 @@ ORM 工具的一种 一系列的
 - migrate 数据库的迁移
 - push 数据库推送
 - studio 数据库可视化工具
+
+## words表
+GitHub 下载 zip -> json文件
+想创建一个words表 导入这个数据? json -> sql/csv 直接导入数据库
+交给ai 上下文 #json 转成csv 格式 字段 135kb token开销有点大
+让ai 写一段格式转换脚本(1000 token) 本地运行 
+### 数据清洗
+- 常见的后端功能
+script 目录
+  解决一些问题 爬虫 数据格式转换等等
+  ai 来做? 上下文比较大 上下文窗口限制的 token开销大
+  ai 生成一个script脚本 本地运行
+- RLS
+  行安全 words 公共表没必要开启
+  而 每个用户的背代词记录 需要开启
+- prompt 执行上下文考虑
+1. prompt提供充足的上下文 数据表 技术架构 放在AGENT.md文件
+2. 隐藏上下文开销 不让AI去读文件 给他文件的格式
+### 让ai了解 supabase 有books表
+- 本地建schema文件
+- 后台的图书业务

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { check, index, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
+import { bigint, check, index, integer, json, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
 
 export const adminUsers = pgTable("admin-users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -31,6 +31,15 @@ export const adminSessions = pgTable("admin-session", {
   index("admin_session_expires_at_idx").on(table.expiresAt),
 ]);
 
+export const words = pgTable("words", {
+  id: bigint("id", { mode: "number" }).generatedByDefaultAsIdentity().primaryKey(),
+  wordRank: integer("wordRank"),
+  headWord: text("headWord"),
+  content: json("content"),
+  bookId: text("bookId"),
+});
+
 export type AdminRole = "system_admin" | "admin";
 export type AdminStatus = "active" | "disabled";
 export type AdminUser = typeof adminUsers.$inferSelect;
+export type Word = typeof words.$inferSelect;
