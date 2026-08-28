@@ -1,0 +1,3 @@
+"use client";
+import { Volume2 } from "lucide-react"; import {useState} from "react";
+export function PronunciationButton({word,type,label}:{word:string;type:1|2;label?:string}){const[playing,setPlaying]=useState(false);async function play(){try{setPlaying(true);const a=new Audio(`https://dict.youdao.com/dictvoice?audio=${encodeURIComponent(word)}&type=${type}`);a.onended=()=>setPlaying(false);a.onerror=()=>setPlaying(false);await a.play()}catch{setPlaying(false)}}return <button type="button" onClick={play} disabled={playing} aria-label={label|| (type===1?"英式发音":"美式发音")} className="pronunciation-button"><Volume2 size={17}/>{label&&<span>{label}</span>}</button>}
