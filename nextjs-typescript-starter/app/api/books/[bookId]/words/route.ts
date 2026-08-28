@@ -3,14 +3,14 @@ import { asc, eq } from "drizzle-orm";
 import { books, db, words } from "@/app/db/index";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 export async function GET(_request: Request, { params }: { params: { bookId: string } }) {
   try {
-    const [book] = await db.select().from(books).where(eq(books.bookId, params.bookId)).limit(1);
+    const [book] = await db.select({ id: books.id, title: books.title, wordCount: books.wordCount, coverUrl: books.coverUrl, bookId: books.bookId, tags: books.tags }).from(books).where(eq(books.bookId, params.bookId)).limit(1);
     if (!book) return NextResponse.json({ error: "单词书不存在" }, { status: 404 });
-    const rows = await db.select().from(words).where(eq(words.bookId, params.bookId)).orderBy(asc(words.wordRank));
-    return NextResponse.json({ book, words: rows });
+    const rows = await db.select({ id: words.id, wordRank: words.wordRank, headWord: words.headWord, content: words.content }).from(words).where(eq(words.bookId, params.bookId)).orderBy(asc(words.wordRank));
+    return NextResponse.json({ book, words: rows }, { headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=60" } });
   } catch (error) {
     console.error("Failed to load book words", error);
     return NextResponse.json({ error: "单词数据加载失败，请稍后重试" }, { status: 500 });
