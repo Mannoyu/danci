@@ -1,0 +1,1 @@
+export default function Loading(){return <main className="app-frame route-loading"><div className="loading-line loading-line-wide"/><div className="loading-block loading-profile"/><div className="loading-line"/><div className="loading-line loading-line-wide"/></main>}

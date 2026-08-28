@@ -1,0 +1,1 @@
+export default function Loading(){return <main className="detail-page route-loading"><div className="loading-line"/><div className="loading-block loading-detail"/><div className="loading-line loading-line-wide"/></main>}

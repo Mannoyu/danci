@@ -13,5 +13,5 @@ export function H5Shell({ children }: { children: React.ReactNode }) {
 }
 
 export function Cover({ src, alt, className = "" }: { src: string; alt: string; className?: string }) {
-  return <img src={src} alt={alt} className={`book-cover ${className}`} />;
+  return <img src={src} alt={alt} loading="lazy" decoding="async" className={`book-cover ${className}`} />;
 }
