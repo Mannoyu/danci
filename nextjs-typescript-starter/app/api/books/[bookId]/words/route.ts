@@ -7,9 +7,14 @@ export const revalidate = 30;
 
 export async function GET(_request: Request, { params }: { params: { bookId: string } }) {
   try {
-    const [book] = await db.select({ id: books.id, title: books.title, wordCount: books.wordCount, coverUrl: books.coverUrl, bookId: books.bookId, tags: books.tags }).from(books).where(eq(books.bookId, params.bookId)).limit(1);
+    const summary = new URL(_request.url).searchParams.get("summary") === "1";
+    const [[book], rows] = await Promise.all([
+      db.select({ id: books.id, title: books.title, wordCount: books.wordCount, coverUrl: books.coverUrl, bookId: books.bookId, tags: books.tags }).from(books).where(eq(books.bookId, params.bookId)).limit(1),
+      summary
+        ? db.select({ id: words.id, wordRank: words.wordRank, headWord: words.headWord }).from(words).where(eq(words.bookId, params.bookId)).orderBy(asc(words.wordRank))
+        : db.select({ id: words.id, wordRank: words.wordRank, headWord: words.headWord, content: words.content }).from(words).where(eq(words.bookId, params.bookId)).orderBy(asc(words.wordRank)),
+    ]);
     if (!book) return NextResponse.json({ error: "单词书不存在" }, { status: 404 });
-    const rows = await db.select({ id: words.id, wordRank: words.wordRank, headWord: words.headWord, content: words.content }).from(words).where(eq(words.bookId, params.bookId)).orderBy(asc(words.wordRank));
     return NextResponse.json({ book, words: rows }, { headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=60" } });
   } catch (error) {
     console.error("Failed to load book words", error);
