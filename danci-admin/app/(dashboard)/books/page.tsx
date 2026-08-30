@@ -102,6 +102,7 @@ export default function BooksPage() {
           <BookFormDialog
             open={createOpen}
             onOpenChange={setCreateOpen}
+            initial={null}
             onSubmit={(formData) => saveBook(formData)}
             trigger={<DialogTrigger render={<Button />}><Plus className="size-4" />新增单词书</DialogTrigger>}
           />
